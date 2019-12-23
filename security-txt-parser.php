@@ -18,7 +18,7 @@
  * along with this program.  If not, see <https://www.gnu.org/licenses/>.
  *
  * @package		security-txt-parser
- * @version 	1.0.0	September 16, 2019
+ * @version 	1.0.1	December 23, 2019
  * @author		Colin Cogle <colin@colincogle.name>
  * @copyright	Copyright (C) 2019 Colin Cogle <colin@colincogle.name>
  * @license 	https://www.gnu.org/licenses/agpl-3.0.html GNU Affero General Public License v3
@@ -97,14 +97,14 @@ function isHTTPS($uri) {
  * HTTPS if no scheme was specified, and appends `.well-known/security.txt` to
  * the URL.
  * 
- * @access		public
- * @author		Thomas Gielfeldt <thomas@gielfeldt.com>
- * @author		Colin Cogle <colin@colincogle.name>
+ * @access	public
+ * @author	Thomas Gielfeldt <thomas@gielfeldt.com>
+ * @author	Colin Cogle <colin@colincogle.name>
  * @copyright	Copyright © 2001-2019 the PHP Group. All rights reserved. 
- * @link		https://www.php.net/manual/en/function.parse-url.php#106731 Original source code.
- * @param		array	$parsed_url	The output of the `parse_url()` function.
- * @return		string	The reconstructed URL.
- * @since		1.0.0
+ * @link	https://www.php.net/manual/en/function.parse-url.php#106731 Original source code.
+ * @param	array	$parsed_url	The output of the `parse_url()` function.
+ * @return	string	The reconstructed URL.
+ * @since	1.0.0
  */
 function unparse_url($parsed_url) {
 	$scheme	= $parsed_url['scheme'] ?? 'https';
@@ -222,8 +222,8 @@ if (isset($_REQUEST['uri'])) {
 					// > organizations that reported security vulnerabilities
 					// > and worked with you to remediate the issue.
 					//
-					// Please be mindful that this is not misspelled; draft-07
-					// spells it the alternate American way, with only one 'e'…
+					// Please be mindful that this is not misspelled; draft-07 and
+					// newer spell it the alternate American way, with only one 'e'…
 					case 'acknowledgments':
 						writeOutput('Acknowledgments are at ' . makeLink($matches[2]));
 						if (isHTTP($matches[2])) {

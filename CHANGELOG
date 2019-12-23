@@ -1,0 +1,7 @@
+Version 1.0.1 (December 23, 2019)
+- No code changes were needed to comply with draft-08, but I edited some
+  comments, so I bumped the version number anyway.  This is functionally
+  identical to version 1.0.0.
+
+Version 1.0.0 (September 16, 2019)
+- First release.

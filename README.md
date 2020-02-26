@@ -1,5 +1,5 @@
 # security-txt-parser
-Fetch and parse a website's security.txt file.  It is compliant with the specification as defined by [draft-foudil-securitytxt-08](https://tools.ietf.org/html/draft-foudil-securitytxt-08).
+Fetch and parse a website's security.txt file.  It is compliant with the specification as defined by [draft-foudil-securitytxt-09](https://tools.ietf.org/html/draft-foudil-securitytxt-09).
 
 ## System Requirements
 This code requires PHP 7, with the GnuPG and cURL modules installed.

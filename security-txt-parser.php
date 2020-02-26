@@ -1,8 +1,8 @@
 <?php
 /**
- * security-txt-parser.php, version 1.0.0
+ * security-txt-parser.php, version 1.1
  * 
- * Copyright (C) 2019 Colin Cogle <colin@colincogle.name>
+ * Copyright (C) 2019-2020 Colin Cogle <colin@colincogle.name>
  *
  * This program is free software:  you can redistribute it and/or modify it under
  * the terms of the GNU Affero General Public License as published by the Free
@@ -18,9 +18,9 @@
  * along with this program.  If not, see <https://www.gnu.org/licenses/>.
  *
  * @package		security-txt-parser
- * @version 	1.0.1	December 23, 2019
+ * @version 	1.1	February 26, 2020
  * @author		Colin Cogle <colin@colincogle.name>
- * @copyright	Copyright (C) 2019 Colin Cogle <colin@colincogle.name>
+ * @copyright	Copyright (C) 2019-2020 Colin Cogle <colin@colincogle.name>
  * @license 	https://www.gnu.org/licenses/agpl-3.0.html GNU Affero General Public License v3
  */
  
@@ -28,7 +28,7 @@
  * makeLink function.
  * Turns the provided URI into a clickable link.  The `<a>` attribute and value
  * `rel="nofollow"` is included to prevent any search engines or other bots from
- * indexing the links..
+ * indexing the links.
  * 
  * @access	public
  * @param	string $uri The URI to make clickable.
@@ -97,14 +97,14 @@ function isHTTPS($uri) {
  * HTTPS if no scheme was specified, and appends `.well-known/security.txt` to
  * the URL.
  * 
- * @access	public
- * @author	Thomas Gielfeldt <thomas@gielfeldt.com>
- * @author	Colin Cogle <colin@colincogle.name>
- * @copyright	Copyright Â© 2001-2019 the PHP Group. All rights reserved. 
- * @link	https://www.php.net/manual/en/function.parse-url.php#106731 Original source code.
- * @param	array	$parsed_url	The output of the `parse_url()` function.
- * @return	string	The reconstructed URL.
- * @since	1.0.0
+ * @access		public
+ * @author		Thomas Gielfeldt <thomas@gielfeldt.com>
+ * @author		Colin Cogle <colin@colincogle.name>
+ * @copyright	Copyright © 2001-2019 the PHP Group. All rights reserved. 
+ * @link		https://www.php.net/manual/en/function.parse-url.php#106731 Original source code.
+ * @param		array	$parsed_url	The output of the `parse_url()` function.
+ * @return		string	The reconstructed URL.
+ * @since		1.0.0
  */
 function unparse_url($parsed_url) {
 	$scheme	= $parsed_url['scheme'] ?? 'https';
@@ -136,7 +136,6 @@ if (isset($_REQUEST['uri'])) {
 	
 	if ($retcode != 200) {
 		echo "<span class=\"error\">An HTTP $retcode error was returned for ", makeLink($uri), '.</span>';
-		exit();
 	} else {
 		// Check and see if the security.txt file is PGP-signed.
 		if (strpos($txtFile, '-----BEGIN PGP SIGNED MESSAGE-----') === false) {
@@ -183,7 +182,7 @@ if (isset($_REQUEST['uri'])) {
 		
 		// From Section 3:
 		//  > For web-based services, the file MUST be accessible via the Hyper-
-		//  > text Transfer Protocol (HTTP) [RFC1945] [â€¦] and it MUST be served
+		//  > text Transfer Protocol (HTTP) [RFC1945] […] and it MUST be served
 		//  > with "https" (as per section 2.7.2 of [RFC7230]).
 		if (!isHTTPS($uri)) {
 			writeOutput('ERROR: <tt>security.txt</tt> files <strong>MUST</strong> be served over HTTPS!');
@@ -222,8 +221,9 @@ if (isset($_REQUEST['uri'])) {
 					// > organizations that reported security vulnerabilities
 					// > and worked with you to remediate the issue.
 					//
-					// Please be mindful that this is not misspelled; draft-07 and
-					// newer spell it the alternate American way, with only one 'e'â€¦
+					// Please be mindful that this is not misspelled; draft-07
+					// and newer spell it the "alternate" American way, with
+					// only one 'e'…
 					case 'acknowledgments':
 						writeOutput('Acknowledgments are at ' . makeLink($matches[2]));
 						if (isHTTP($matches[2])) {
@@ -231,7 +231,7 @@ if (isset($_REQUEST['uri'])) {
 						}
 						break;
 					
-					// â€¦so show the user a special error if the security.txt
+					// …so show the user a special error if the security.txt
 					// file has the incorrect spelling.
 					case 'acknowledgements':
 						writeOutput('ERROR: An unknown directive, <a href="https://grammarist.com/spelling/acknowledgment-acknowledgement/">' . $matches[1] . '</a>, was found.');
@@ -296,7 +296,32 @@ if (isset($_REQUEST['uri'])) {
 						}
 						break;
 					
-					// Hiring [Section 3.5.5]:
+					// Expires [Section 3.5.5]:
+					// > This field indicates the date and time after which the
+					// > data contained in the "security.txt" file is considered
+					//.> stale and should not be used (as per Section 6.2). The
+					// > value of this field follows the format defined in sec-
+					// > tion 3.3 of [RFC5322].	
+					// >
+					// > This field MUST NOT appear more than once.
+					// 
+					// In addition, I'm parsing it through strtotime() and the
+					// date() function, just to make sure that it's actually a
+					// valid date.
+					case 'expires': 
+						if ($foundExpires) {
+							writeOutput('ERROR: <tt>Expires</tt> cannot be specified more than once!');
+						} else {
+							$foundExpires = $true;
+							$timestamp = strtotime($matches[2]);
+							writeOutput('This information expires at '
+								+ '<time datetime="' + date('c', $timestamp) + '">'
+								+     date('r', $timestamp)
+								+ '</time>.'
+							);
+						}
+					
+					// Hiring [Section 3.5.6]:
 					// > The "Hiring" directive is used for linking to the ven-
 					// > dor's security-related job positions.  If this directive
 					// > indicates a web URL, then it MUST begin with "https://"
@@ -308,7 +333,7 @@ if (isset($_REQUEST['uri'])) {
 						}
 						break;
 					
-					// Policy [Section 3.5.6]:
+					// Policy [Section 3.5.7]:
 					// > This directive allows you to link to where your security
 					// > policy and/or disclosure policy is located.  This can
 					// > help security researchers understand what you are looking
@@ -322,7 +347,7 @@ if (isset($_REQUEST['uri'])) {
 						}
 						break;
 
-					// Preferred-Languages [Section 3.5.7]:
+					// Preferred-Languages [Section 3.5.8]:
 					// > This directive can be used to indicate a set of natural
 					// > languages that are preferred when submitting security
 					// > reports.  This set MAY list multiple values, separated

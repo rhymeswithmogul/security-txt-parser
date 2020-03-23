@@ -1,3 +1,5 @@
+![security-txt-parser logo](https://repository-images.githubusercontent.com/208955711/03aa0100-6ca8-11ea-972d-e27719dbae5e)
+
 # security-txt-parser
 Fetch and parse a website's security.txt file.  It is compliant with the specification as defined by [draft-foudil-securitytxt-09](https://tools.ietf.org/html/draft-foudil-securitytxt-09).
 

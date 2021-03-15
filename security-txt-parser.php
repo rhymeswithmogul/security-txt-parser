@@ -114,15 +114,17 @@ function isHTTPS($uri) {
  * @copyright	Copyright � 2001-2019 the PHP Group. All rights reserved. 
  * @link		https://www.php.net/manual/en/function.parse-url.php#106731 Original source code.
  * @param		array	$parsed_url	The output of the `parse_url()` function.
+ * @param		boolean	$useOldURL	If true, the deprecated `/security.txt` will be fetched instead of the current `/.well-known/security.txt`.
  * @return		string	The reconstructed URL.
- * @since		1.0.0
+ * @since		1.1.0
  */
-function unparse_url($parsed_url) {
+function unparse_url($parsed_url, $useOldURL = $false) {
 	$scheme	= $parsed_url['scheme'] ?? 'https';
 	$host	= $parsed_url['host']   ?? '';
 	$port	= isset($parsed_url['port']) ? ':' . $parsed_url['port'] : '';
 	$path	= $parsed_url['path']   ?? '';
-	return "$scheme://$host$port$path/.well-known/security.txt";
+	$folder	= $useOldURL ? '' : '/.well-known';
+	return "$scheme://$host$port$path$folder/security.txt";
 } 
 
 // Operate on a variable named URI.

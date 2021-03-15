@@ -118,7 +118,7 @@ function isHTTPS($uri) {
  * @return		string	The reconstructed URL.
  * @since		1.1.0
  */
-function unparse_url($parsed_url, $useOldURL = $false) {
+function unparse_url($parsed_url, $useOldURL = false) {
 	$scheme	= $parsed_url['scheme'] ?? 'https';
 	$host	= $parsed_url['host']   ?? '';
 	$port	= isset($parsed_url['port']) ? ':' . $parsed_url['port'] : '';

@@ -143,8 +143,10 @@ if (isset($_REQUEST['uri'])) {
 	curl_setopt($ch, CURLOPT_HTTPHEADER, array('Accept: text/plain'));
 	curl_setopt($ch, CURLOPT_FOLLOWLOCATION, true);
 	curl_setopt($ch, CURLOPT_RETURNTRANSFER, true);
+	curl_setopt($ch, CURLOPT_USERAGENT, 'security-txt-parser/1.2 (https://www.colincogle.name/made/security-txt-parser/)');
 	$txtFile = curl_exec($ch);
 	$retcode = curl_getinfo($ch, CURLINFO_HTTP_CODE);
+	$contentType = curl_getinfo($ch, CURLINFO_CONTENT_TYPE);
 	curl_close($ch);
 	
 	if ($retcode != 200) {
@@ -200,6 +202,11 @@ if (isset($_REQUEST['uri'])) {
 		//  > with "https" (as per section 2.7.2 of [RFC7230]).
 		if (!isHTTPS($uri)) {
 			writeOutput('ERROR: <tt>security.txt</tt> files <strong>MUST</strong> be served over HTTPS!');
+		}
+
+		// Check the content type.
+		if (preg_match('/^text\/plain(?:;\s?charset=utf-8)?$/i', $contentType) !== 1) {
+			writeOutput('ERROR: <tt>security.txt</tt> files <strong>MUST</strong> have <tt>Content-Type: text/plain</tt> with UTF-8 encoding!  This file is: ' . $contentType);
 		}
 		
 		// Now go line-by-line through the remainder of the file.  Use "\n" to

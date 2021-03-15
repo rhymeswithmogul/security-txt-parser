@@ -1,10 +1,12 @@
 Version 1.2 (March 15, 2021)
 - Updated for compliance with draft-10.  The Expires directive is now mandatory.
 - Updated for compliance with draft-11.  There were no breaking changes.
-- Improved handling of links.
+- Added support for ranking Contact directives.
+- Added support for checking the Content-Type header, to make sure security.txt
+  files are being served as "text/plain" or "text/plain; charset=UTF-8".
+- Improved handling of links with mailto, tel, dns, and openpgp4fpr schemes.
 - Removed support for HTTP links.  Support was included for compatibility and
   testing purposes, but are not a part of the current draft specification.
-- Added support for ranking Contact directives.
 
 Version 1.1 (February 26, 2020)
 - Updated for compliance with draft-09.  The Expires directive is now supported.

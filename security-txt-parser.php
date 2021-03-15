@@ -318,7 +318,9 @@ if (isset($_REQUEST['uri'])) {
 					case 'encryption':
 						$keyInfo = $matches[2];
 						if (substr($keyInfo, 0, 4) == 'dns:') {
-							writeOutput('An encryption key can be found in the DNS record: ' . explode('.?', substr($keyInfo,4))[0]);
+							$dnsRecord = explode('.?', substr($keyInfo,4))[0];
+							writeOutput('An encryption key can be found in the DNS record: '
+								. "<a rel=\"nofollow\" href=\"https://dns.google.com/query?show_dnssec=true&rrtype=61&name=$dnsRecord\">$dnsRecord</a>");
 						}
 						elseif (substr($keyInfo, 0, 12) == 'openpgp4fpr:') {
 							$split = str_split(substr($keyInfo, 12), 4);

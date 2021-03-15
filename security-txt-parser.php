@@ -185,7 +185,7 @@ if (isset($_REQUEST['uri'])) {
 		
 		// Prepare some flags to act upon later.
 		$foundCanonical = false;
-		$foundContact   = false;
+		$foundContact   = 0;		// we count these for preference values
 		$foundExpires   = false;
 		$foundPrefLang  = false;
 
@@ -291,7 +291,7 @@ if (isset($_REQUEST['uri'])) {
 					// TODO: Rank multiple Contact directives in order, an
 					//       implied preference.
 					case 'contact':
-						$foundContact = true;
+						$foundContact++;
 
 						// This is reversed from the other functions.  This is
 						// because web URI's must use HTTPS;  however, other
@@ -300,7 +300,7 @@ if (isset($_REQUEST['uri'])) {
 							writeOutput('ERROR: <tt>Contact</tt> web URL\'s <strong>MUST</strong> use HTTPS!');
 						}
 						else {
-							writeOutput('Contact information: ' . makeLink($matches[2]));
+							writeOutput('Contact information: ' . makeLink($matches[2]) . " [preference $foundContact]");
 						}
 						break;
 					
@@ -421,7 +421,7 @@ if (isset($_REQUEST['uri'])) {
 		}
 
 		// Finally, print a warning if mandatory directives were not found.
-		if ($foundContact === false) {
+		if ($foundContact == 0) {
 			writeOutput('ERROR: The mandatory <tt>Contact</tt> directive was not found.');
 		}
 		if ($foundExpires === false) {

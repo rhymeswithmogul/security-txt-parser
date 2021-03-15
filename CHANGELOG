@@ -1,6 +1,10 @@
 Version 1.2 (March 15, 2021)
 - Updated for compliance with draft-10.  The Expires directive is now mandatory.
 - Updated for compliance with draft-11.  There were no breaking changes.
+- Improved handling of links.
+- Removed support for HTTP links.  Support was included for compatibility and
+  testing purposes, but are not a part of the current draft specification.
+- Added support for ranking Contact directives.
 
 Version 1.1 (February 26, 2020)
 - Updated for compliance with draft-09.  The Expires directive is now supported.

@@ -34,10 +34,20 @@
  * @access	public
  * @param	string $uri The URI to parse and/or make clickable.
  * @return	string The URI in a more appropriate form.
- * @since	1.0.0
+ * @since	1.1.0
  */
 function makeLink($uri) {
-	return "<a rel=\"nofollow\" href=\"$uri\">$uri</a>";
+	$scheme = explode(':', $uri);
+	if (in_array($scheme[0], array('https', 'http', 'mailto', 'tel'))) {
+		return "<a rel=\"nofollow\" href=\"$uri\">$uri</a>";
+	}
+	elseif (count($scheme) == 1) {
+		writeOutput('ERROR: The below directive\'s value <strong>MUST</strong> be a URI, but is not:');
+		return $uri;
+	}
+	else {
+		return $uri;
+	}
 }
 
 /**
@@ -217,24 +227,27 @@ if (isset($_REQUEST['uri'])) {
 				switch (strtolower($matches[1]))
 				{
 					// Acknowledgments [Section 3.5.1]:
-					// > This directive allows you to link to a page where
-					// > security researchers are recognized for their reports.
-					// > The page being linked to SHOULD list individuals or
-					// > organizations that reported security vulnerabilities
-					// > and worked with you to remediate the issue.
+					// > This field indicates a link to a page where security
+					// > researchers are recognized for their reports. The page
+					// > being referenced should list security researchers that
+					// > reported security vulnerabilities and collaborated to
+					// > remediate them.  Organizations should be careful to
+					// > limit the vulnerability information being published in
+					// > order to prevent future attacks.
 					//
 					// Please be mindful that this is not misspelled; draft-07
 					// and newer spell it the "alternate" American way, with
-					// only one 'e'�
+					// only one 'e'.
 					case 'acknowledgments':
-						writeOutput('Acknowledgments are at ' . makeLink($matches[2]));
 						if (isHTTP($matches[2])) {
-							writeOutput('ERROR: <tt>Acknowledgment</tt> web URL\'s <strong>MUST</strong> use HTTPS!');
+							writeOutput('ERROR: <tt>Acknowledgment</tt> URL\'s <strong>MUST</strong> use HTTPS!');
+						} else {
+							writeOutput('Acknowledgments are at ' . makeLink($matches[2]));
 						}
 						break;
 					
-					// �so show the user a special error if the security.txt
-					// file has the incorrect spelling.
+					// Show the user a special error if the security.txt file
+					// has the pre-draft-07 (incorrect) spelling.
 					case 'acknowledgements':
 						writeOutput('ERROR: An unknown directive, <a href="https://grammarist.com/spelling/acknowledgment-acknowledgement/">' . $matches[1] . '</a>, was found.');
 						break;
@@ -252,11 +265,14 @@ if (isset($_REQUEST['uri'])) {
 					case 'canonical':
 						if ($foundCanonical) {
 							writeOutput('ERROR: <tt>Canonical</tt> cannot be specified more than once!');
-						} else {
+						}
+						else {
 							$foundCanonical = true;
-							writeOutput('This file\'s canonical URI is: ' . makeLink($matches[2]));
 							if (isHTTP($matches[2])) {
-								writeOutput('ERROR: <tt>Canonical</tt> web URL\'s <strong>MUST</strong> use HTTPS!');
+								writeOutput('ERROR: <tt>Canonical</tt> URL\'s <strong>MUST</strong> use HTTPS!');
+							}
+							else {
+								writeOutput('This file\'s canonical URI is: ' . makeLink($matches[2]));
 							}
 						}
 						break;
@@ -276,9 +292,15 @@ if (isset($_REQUEST['uri'])) {
 					//       implied preference.
 					case 'contact':
 						$foundContact = true;
-						writeOutput('Contact information: ' . makeLink($matches[2]));
+
+						// This is reversed from the other functions.  This is
+						// because web URI's must use HTTPS;  however, other
+						// schemes are allowed, such as mailto: or tel:.
 						if (isHTTP($matches[2])) {
 							writeOutput('ERROR: <tt>Contact</tt> web URL\'s <strong>MUST</strong> use HTTPS!');
+						}
+						else {
+							writeOutput('Contact information: ' . makeLink($matches[2]));
 						}
 						break;
 					
@@ -293,20 +315,19 @@ if (isset($_REQUEST['uri'])) {
 					// > [RFC7230]).
 					case 'encryption':
 						$keyInfo = $matches[2];
-						if (isHTTPS($keyInfo)) {
-							writeOutput('An encryption key can be found at ' . makeLink($keyInfo));
-						}
-						elseif (substr($keyInfo, 0, 4) == 'dns:') {
+						if (substr($keyInfo, 0, 4) == 'dns:') {
 							writeOutput('An encryption key can be found in the DNS record: ' . explode('.?', substr($keyInfo,4))[0]);
 						}
 						elseif (substr($keyInfo, 0, 12) == 'openpgp4fpr:') {
 							$split = str_split(substr($keyInfo, 12), 4);
 							writeOutput('An encryption key has the fingerprint: ' . implode(' ', $split));
 						}
-						else {
-							writeOutput('ERROR: An <tt>Encryption</tt> URI had no valid scheme!  Only HTTPS, DNS, and OpenPGP4FPR schemes are supported.');
+						elseif (isHTTP($keyInfo)) {
+							writeOutput('ERROR: <tt>Encryption</tt> web URI\'s <strong>MUST</strong> use HTTPS!');
 						}
-						
+						else {
+							writeOutput('An encryption key can be found at ' . makeLink($keyInfo));
+						}
 						break;
 					
 					// Expires [Section 3.5.5]:
@@ -343,9 +364,11 @@ if (isset($_REQUEST['uri'])) {
 					// > indicates a web URL, then it MUST begin with "https://"
 					// > (as per section 2.7.2 of [RFC7230]).
 					case 'hiring':
-						writeOutput('Security-related job listings can be found at ' . makeLink($matches[2]));
 						if (isHTTP($matches[2])) {
 							writeOutput('ERROR: <tt>Hiring</tt> web URL\'s <strong>MUST</strong> use HTTPS!');
+						}
+						else {
+							writeOutput('Security-related job listings can be found at ' . makeLink($matches[2]));
 						}
 						break;
 					
@@ -357,9 +380,11 @@ if (isset($_REQUEST['uri'])) {
 					// > directive indicates a web URL, then it MUST begin with
 					// > "https://" (as per section 2.7.2 of [RFC7230]).
 					case 'policy':
-						writeOutput('A security reporting policy can be found at ' . makeLink($matches[2]));
 						if (isHTTP($matches[2])) {
 							writeOutput('ERROR: <tt>Policy</tt> web URL\'s <strong>MUST</strong> use HTTPS!');
+						}
+						else {
+							writeOutput('A security reporting policy can be found at ' . makeLink($matches[2]));
 						}
 						break;
 

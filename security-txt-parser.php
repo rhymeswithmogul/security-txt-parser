@@ -198,13 +198,16 @@ if (isset($_REQUEST['uri'])) {
 		
 		// From Section 3:
 		//  > For web-based services, the file MUST be accessible via the Hyper-
-		//  > text Transfer Protocol (HTTP) [RFC1945] [�] and it MUST be served
+		//  > text Transfer Protocol (HTTP) [RFC1945] and it MUST be served
 		//  > with "https" (as per section 2.7.2 of [RFC7230]).
 		if (!isHTTPS($uri)) {
 			writeOutput('ERROR: <tt>security.txt</tt> files <strong>MUST</strong> be served over HTTPS!');
 		}
 
 		// Check the content type.
+		// > The file format of the security.txt file MUST be plain text (MIME
+		// > type "text/plain") as defined in section 4.1.3 of [RFC2046] and
+		// > MUST be encoded using UTF-8 [RFC3629] in Net-Unicode form [RFC5198].
 		if (preg_match('/^text\/plain(?:;\s?charset=utf-8)?$/i', $contentType) !== 1) {
 			writeOutput('ERROR: <tt>security.txt</tt> files <strong>MUST</strong> have <tt>Content-Type: text/plain</tt> with UTF-8 encoding!  This file is: ' . $contentType);
 		}
@@ -357,10 +360,10 @@ if (isset($_REQUEST['uri'])) {
 					// date() function, just to make sure that it's actually a
 					// valid date.
 					case 'expires': 
-						if ($foundExpires) {
+						if ($foundExpires == true) {
 							writeOutput('ERROR: <tt>Expires</tt> cannot be specified more than once!');
 						} else {
-							$foundExpires = $true;
+							$foundExpires = true;
 							$timestamp = strtotime($matches[2]);
 							writeOutput('This information expires at '
 								+ '<time datetime="' + date('c', $timestamp) + '">'

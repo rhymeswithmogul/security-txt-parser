@@ -366,9 +366,9 @@ if (isset($_REQUEST['uri'])) {
 							$foundExpires = true;
 							$timestamp = strtotime($matches[2]);
 							writeOutput('This information expires at '
-								+ '<time datetime="' + date('c', $timestamp) + '">'
-								+     date('r', $timestamp)
-								+ '</time>.'
+								. '<time datetime="' . date('c', $timestamp) . '">'
+								.     date('r', $timestamp)
+								. '</time>.'
 							);
 						}
 					

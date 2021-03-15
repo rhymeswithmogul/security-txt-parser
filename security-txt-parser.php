@@ -19,21 +19,21 @@
  * along with this program.  If not, see <https://www.gnu.org/licenses/>.
  *
  * @package		security-txt-parser
- * @version 	1.1	February 26, 2020
+ * @version 	1.2	March 15, 2021
  * @author		Colin Cogle <colin@colincogle.name>
- * @copyright	Copyright (C) 2019-2020 Colin Cogle <colin@colincogle.name>
+ * @copyright	Copyright (C) 2019-2021 Colin Cogle <colin@colincogle.name>
  * @license 	https://www.gnu.org/licenses/agpl-3.0.html GNU Affero General Public License v3
  */
  
 /**
  * makeLink function.
- * Turns the provided URI into a clickable link.  The `<a>` attribute and value
- * `rel="nofollow"` is included to prevent any search engines or other bots from
- * indexing the links.
+ * The provided URI will be turned into a clickable link.  The `<a>` attribute
+ * and value `rel="nofollow"` is included to prevent any search engines or other
+ * bots from indexing the links.
  * 
  * @access	public
- * @param	string $uri The URI to make clickable.
- * @return	string The URI wrapped in an HTML <a> tag.
+ * @param	string $uri The URI to parse and/or make clickable.
+ * @return	string The URI in a more appropriate form.
  * @since	1.0.0
  */
 function makeLink($uri) {
@@ -292,10 +292,21 @@ if (isset($_REQUEST['uri'])) {
 					// > MUST begin with "https://" (as per section 2.7.2 of
 					// > [RFC7230]).
 					case 'encryption':
-						writeOutput('An encryption key can be found at ' . makeLink($matches[2]));
-						if (isHTTP($matches[2])) {
-							writeOutput('ERROR: <tt>Encryption</tt> web URL\'s <strong>MUST</strong> use HTTPS!');
+						$keyInfo = $matches[2];
+						if (isHTTPS($keyInfo)) {
+							writeOutput('An encryption key can be found at ' . makeLink($keyInfo));
 						}
+						elseif (substr($keyInfo, 0, 4) == 'dns:') {
+							writeOutput('An encryption key can be found in the DNS record: ' . explode('.?', substr($keyInfo,4))[0]);
+						}
+						elseif (substr($keyInfo, 0, 12) == 'openpgp4fpr:') {
+							$split = str_split(substr($keyInfo, 12), 4);
+							writeOutput('An encryption key has the fingerprint: ' . implode(' ', $split));
+						}
+						else {
+							writeOutput('ERROR: An <tt>Encryption</tt> URI had no valid scheme!  Only HTTPS, DNS, and OpenPGP4FPR schemes are supported.');
+						}
+						
 						break;
 					
 					// Expires [Section 3.5.5]:

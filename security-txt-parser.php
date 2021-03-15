@@ -1,8 +1,9 @@
 <?php
 /**
- * security-txt-parser.php, version 1.1
+ * security-txt-parser.php, version 1.2
  * 
- * Copyright (C) 2019-2020 Colin Cogle <colin@colincogle.name>
+ * Copyright (C) 2019-2021 Colin Cogle <colin@colincogle.name>
+ * Project home page: https://github.com/rhymeswithmogul/security-txt-parser
  *
  * This program is free software:  you can redistribute it and/or modify it under
  * the terms of the GNU Affero General Public License as published by the Free
@@ -100,7 +101,7 @@ function isHTTPS($uri) {
  * @access		public
  * @author		Thomas Gielfeldt <thomas@gielfeldt.com>
  * @author		Colin Cogle <colin@colincogle.name>
- * @copyright	Copyright © 2001-2019 the PHP Group. All rights reserved. 
+ * @copyright	Copyright ï¿½ 2001-2019 the PHP Group. All rights reserved. 
  * @link		https://www.php.net/manual/en/function.parse-url.php#106731 Original source code.
  * @param		array	$parsed_url	The output of the `parse_url()` function.
  * @return		string	The reconstructed URL.
@@ -175,6 +176,7 @@ if (isset($_REQUEST['uri'])) {
 		// Prepare some flags to act upon later.
 		$foundCanonical = false;
 		$foundContact   = false;
+		$foundExpires   = false;
 		$foundPrefLang  = false;
 
 		// Begin output.
@@ -182,7 +184,7 @@ if (isset($_REQUEST['uri'])) {
 		
 		// From Section 3:
 		//  > For web-based services, the file MUST be accessible via the Hyper-
-		//  > text Transfer Protocol (HTTP) [RFC1945] […] and it MUST be served
+		//  > text Transfer Protocol (HTTP) [RFC1945] [ï¿½] and it MUST be served
 		//  > with "https" (as per section 2.7.2 of [RFC7230]).
 		if (!isHTTPS($uri)) {
 			writeOutput('ERROR: <tt>security.txt</tt> files <strong>MUST</strong> be served over HTTPS!');
@@ -223,7 +225,7 @@ if (isset($_REQUEST['uri'])) {
 					//
 					// Please be mindful that this is not misspelled; draft-07
 					// and newer spell it the "alternate" American way, with
-					// only one 'e'…
+					// only one 'e'ï¿½
 					case 'acknowledgments':
 						writeOutput('Acknowledgments are at ' . makeLink($matches[2]));
 						if (isHTTP($matches[2])) {
@@ -231,7 +233,7 @@ if (isset($_REQUEST['uri'])) {
 						}
 						break;
 					
-					// …so show the user a special error if the security.txt
+					// ï¿½so show the user a special error if the security.txt
 					// file has the incorrect spelling.
 					case 'acknowledgements':
 						writeOutput('ERROR: An unknown directive, <a href="https://grammarist.com/spelling/acknowledgment-acknowledgement/">' . $matches[1] . '</a>, was found.');
@@ -299,11 +301,14 @@ if (isset($_REQUEST['uri'])) {
 					// Expires [Section 3.5.5]:
 					// > This field indicates the date and time after which the
 					// > data contained in the "security.txt" file is considered
-					//.> stale and should not be used (as per Section 6.2). The
+					// > stale and should not be used (as per Section 6.3). The
 					// > value of this field follows the format defined in sec-
-					// > tion 3.3 of [RFC5322].	
+					// > tion 3.3 of [RFC5322]. It is RECOMMENDED that the value
+					// > of this field be less than a year into the future to
+					// > avoid staleness.
 					// >
-					// > This field MUST NOT appear more than once.
+					// > This field MUST always be present and MUST NOT appear
+					// > more than once.
 					// 
 					// In addition, I'm parsing it through strtotime() and the
 					// date() function, just to make sure that it's actually a
@@ -379,9 +384,12 @@ if (isset($_REQUEST['uri'])) {
 			}
 		}
 
-		// Finally, print a warning if no Contact directive was found.
+		// Finally, print a warning if mandatory directives were not found.
 		if ($foundContact === false) {
 			writeOutput('ERROR: The mandatory <tt>Contact</tt> directive was not found.');
+		}
+		if ($foundExpires === false) {
+			writeOutput('ERROR: The mandatory <tt>Expires</tt> directive was not found.');
 		}
 		echo "</ul>\r\n";
 	}

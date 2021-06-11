@@ -1,7 +1,7 @@
 <?php
 /**
  * security-txt-parser.php, version 1.3
- * 
+ *
  * Copyright (C) 2019-2021 Colin Cogle <colin@colincogle.name>
  * Project home page: https://github.com/rhymeswithmogul/security-txt-parser
  *
@@ -24,13 +24,13 @@
  * @copyright	Copyright (C) 2019-2021 Colin Cogle <colin@colincogle.name>
  * @license 	https://www.gnu.org/licenses/agpl-3.0.html GNU Affero General Public License v3
  */
- 
+
 /**
  * makeLink function.
  * The provided URI will be turned into a clickable link.  The `<a>` attribute
  * and value `rel="nofollow"` is included to prevent any search engines or other
  * bots from indexing the links.
- * 
+ *
  * @access	public
  * @param	string $uri The URI to parse and/or make clickable.
  * @return	string The URI in a more appropriate form.
@@ -39,7 +39,7 @@
 function makeLink($uri) {
 	// Be sure to write all schemes as lowercase.
 	$clickableSchemes = array('http', 'https', 'mailto', 'msteams', 'tel');
-	
+
 	$scheme = explode(':', $uri);
 	if (in_array(strtolower($scheme[0]), $clickableSchemes)) {
 		return "<a rel=\"nofollow\" href=\"$uri\">$uri</a>";
@@ -58,7 +58,7 @@ function makeLink($uri) {
  * Wraps the provided text inside a `<li>` tag for cleaner output before
  * printing it to the screen.  If the text begins with "ERROR:", the `<li>`
  * will appear with the CSS class name `error`.
- * 
+ *
  * @access	public
  * @param	string $msg The message to print to the screen.
  * @return	void Nothing is returned; the HTML is printed to `stdout`.
@@ -76,7 +76,7 @@ function writeOutput($msg) {
 /**
  * isHTTP function.
  * Returns true if the specified URI is non-secure HTTP.
- * 
+ *
  * @access	public
  * @param	string $uri The URI to check.
  * @return	bool        True if the URI uses plain HTTP.
@@ -89,7 +89,7 @@ function isHTTP($uri) {
 /**
  * isHTTPS function.
  * Returns true if the specified URI is HTTPS.
- * 
+ *
  * @access	public
  * @param	string $uri The URI to check.
  * @return	bool        True, if the URI uses HTTPS.
@@ -101,7 +101,7 @@ function isHTTPS($uri) {
 
 /**
  * unparse_url function.
- * 
+ *
  * This function takes the array that was output from `parse_url()`, and then
  * rebuilds a safe, sanitized URL.
  *
@@ -110,16 +110,16 @@ function isHTTPS($uri) {
  * usernames and passwords, ignores query strings, ignores fragments; assumes
  * HTTPS if no scheme was specified, and appends `.well-known/security.txt` to
  * the URL.
- * 
- * @access		public
- * @author		Thomas Gielfeldt <thomas@gielfeldt.com>
- * @author		Colin Cogle <colin@colincogle.name>
- * @copyright	Copyright � 2001-2019 the PHP Group. All rights reserved. 
- * @link		https://www.php.net/manual/en/function.parse-url.php#106731 Original source code.
- * @param		array	$parsed_url	The output of the `parse_url()` function.
- * @param		boolean	$useOldURL	If true, the deprecated `/security.txt` will be fetched instead of the current `/.well-known/security.txt`.
- * @return		string	The reconstructed URL.
- * @since		1.1.0
+ *
+ * @access	public
+ * @author	Thomas Gielfeldt <thomas@gielfeldt.com>
+ * @author	Colin Cogle <colin@colincogle.name>
+ * @copyright	Copyright � 2001-2019 the PHP Group. All rights reserved.
+ * @link	https://www.php.net/manual/en/function.parse-url.php#106731 Original source code.
+ * @param	array	$parsed_url	The output of the `parse_url()` function.
+ * @param	boolean	$useOldURL	If true, the deprecated `/security.txt` will be fetched instead of the current `/.well-known/security.txt`.
+ * @return	string	The reconstructed URL.
+ * @since	1.1.0
  */
 function unparse_url($parsed_url, $useOldURL = false) {
 	$scheme	= $parsed_url['scheme'] ?? 'https';
@@ -128,7 +128,7 @@ function unparse_url($parsed_url, $useOldURL = false) {
 	$path	= $parsed_url['path']   ?? '';
 	$folder	= $useOldURL ? '' : '/.well-known';
 	return "$scheme://$host$port$path$folder/security.txt";
-} 
+}
 
 // Operate on a variable named URI.
 if (isset($_REQUEST['uri'])) {
@@ -140,7 +140,7 @@ if (isset($_REQUEST['uri'])) {
 		die("Could not parse the given URI.");
 	}
 	$uri = unparse_url($parsedURI);
-	
+
 	// Create and invoke cURL.
 	$ch = curl_init($uri);
 	curl_setopt($ch, CURLOPT_HTTPHEADER, array('Accept: text/plain'));
@@ -151,7 +151,7 @@ if (isset($_REQUEST['uri'])) {
 	$retcode = curl_getinfo($ch, CURLINFO_HTTP_CODE);
 	$contentType = curl_getinfo($ch, CURLINFO_CONTENT_TYPE);
 	curl_close($ch);
-	
+
 	if ($retcode != 200) {
 		echo "<span class=\"error\">An HTTP $retcode error was returned for ", makeLink($uri), '.</span>';
 	} else {
@@ -167,7 +167,7 @@ if (isset($_REQUEST['uri'])) {
 			// something in /tmp that's not important..
 			putenv('GNUPGHOME=/tmp/.gnupg');
 			$signatureInfo = (new gnupg())->verify($txtFile, false, $plaintext);
-			
+
 			echo '<details>';
 			if ($signatureInfo === false) {
 				echo '<summary>Found a badly-signed text file!</summary>';
@@ -184,12 +184,12 @@ if (isset($_REQUEST['uri'])) {
 					'</summary>';
 			}
 			echo '<pre>', $txtFile, '</pre></details>';
-			
+
 			// We're done with the signature.
 			// The rest of this script will only parse the signed content.
 			$txtFile = $plaintext;
 		}
-		
+
 		// Prepare some flags to act upon later.
 		$foundCanonical = false;
 		$foundGoodCanonical = false;
@@ -200,7 +200,7 @@ if (isset($_REQUEST['uri'])) {
 
 		// Begin output.
 		echo '<ul>';
-		
+
 		// From Section 3:
 		//  > For web-based services, the file MUST be accessible via the Hyper-
 		//  > text Transfer Protocol (HTTP) [RFC1945] and it MUST be served
@@ -216,7 +216,7 @@ if (isset($_REQUEST['uri'])) {
 		if (preg_match('/^text\/plain(?:;\s?charset=utf-8)?$/i', $contentType) !== 1) {
 			writeOutput('ERROR: <tt>security.txt</tt> files <strong>MUST</strong> have <tt>Content-Type: text/plain</tt> with UTF-8 encoding!  This file is: ' . $contentType);
 		}
-		
+
 		// Now go line-by-line through the remainder of the file.  Use "\n" to
 		// satisfy Section 3.3:
 		// > Every line MUST end either with a carriage return and line feed
@@ -230,13 +230,13 @@ if (isset($_REQUEST['uri'])) {
 			if (trim($line) === '' or $line[0] === '#') {
 				continue;
 			}
-			
+
 			// Do we have a line in the format of "Directive: Content"?
 			// If not, print an error.
 			else if (preg_match('/^([A-Za-z\-]+):\s+([^\r\n]*)[\r\n]*$/', $line, $matches) !== 1) {
 				writeOutput("ERROR: An unparseable line was found.");
 			}
-			
+
 			// We **do** have a directive.  Analyze it.
 			else {
 				// "Directives MUST be case-insensitive (as per section 2.3 of
@@ -262,20 +262,20 @@ if (isset($_REQUEST['uri'])) {
 							writeOutput('Acknowledgments are at ' . makeLink($matches[2]));
 						}
 						break;
-					
+
 					// Show the user a special error if the security.txt file
 					// has the pre-draft-07 (incorrect) spelling.
 					case 'acknowledgements':
 						writeOutput('ERROR: An unknown directive, <a href="https://grammarist.com/spelling/acknowledgment-acknowledgement/">' . $matches[1] . '</a>, was found.');
 						break;
-					
+
 					// Canonical [Section 3.5.2]:
 					// > This field indicates the canonical URIs where the
 					// > "security.txt" file is located, which is usually some-
 					// > thing like "https://example.com/.well-known/security.txt".
 					// > If this field indicates a web URI, then it MUST begin
 					// > with "https://" (as per section 2.7.2 of [RFC7230]).
-					// > 
+					// >
 					// > While this field indicates that a "security.txt" retrieved
 					// > from a given URI is intended to apply to that URI, it
 					// > MUST NOT be interpreted to apply to all canonical URIs
@@ -283,7 +283,7 @@ if (isset($_REQUEST['uri'])) {
 					// > additional trust mechanism such as a digital signature
 					// > (as per Section 3.3) to make the determination that a
 					// > particular canonical URI is applicable.
-					// > 
+					// >
 					// > If this field appears within a "security.txt" file,
 					// > and the URI used to retrieve that file is not listed
 					// > within any canonical fields, then the contents of the
@@ -304,7 +304,7 @@ if (isset($_REQUEST['uri'])) {
 							}
 						}
 						break;
-					
+
 					// Contact [Section 3.5.3]:
 					// > This directive allows you to provide an address that
 					// > researchers SHOULD use for reporting security vulner-
@@ -331,7 +331,7 @@ if (isset($_REQUEST['uri'])) {
 							writeOutput('Contact information: ' . makeLink($matches[2]) . " [preference $foundContact]");
 						}
 						break;
-					
+
 					// Encryption [Section 3.5.4]:
 					// > This directive allows you to point to an encryption key
 					// > that security researchers SHOULD use for encrypted com-
@@ -359,7 +359,7 @@ if (isset($_REQUEST['uri'])) {
 							writeOutput('An encryption key can be found at ' . makeLink($keyInfo));
 						}
 						break;
-					
+
 					// Expires [Section 3.5.5]:
 					// > This field indicates the date and time after which the
 					// > data contained in the "security.txt" file is considered
@@ -371,11 +371,11 @@ if (isset($_REQUEST['uri'])) {
 					// >
 					// > This field MUST always be present and MUST NOT appear
 					// > more than once.
-					// 
+					//
 					// In addition, I'm parsing it through strtotime() and the
 					// date() function, just to make sure that it's actually a
 					// valid date.
-					case 'expires': 
+					case 'expires':
 						if ($foundExpires == true) {
 							writeOutput('ERROR: <tt>Expires</tt> cannot be specified more than once!');
 						} else {
@@ -389,7 +389,7 @@ if (isset($_REQUEST['uri'])) {
 							);
 						}
 						break;
-					
+
 					// Hiring [Section 3.5.6]:
 					// > The "Hiring" directive is used for linking to the ven-
 					// > dor's security-related job positions.  If this directive
@@ -403,7 +403,7 @@ if (isset($_REQUEST['uri'])) {
 							writeOutput('Security-related job listings can be found at ' . makeLink($matches[2]));
 						}
 						break;
-					
+
 					// Policy [Section 3.5.7]:
 					// > This directive allows you to link to where your security
 					// > policy and/or disclosure policy is located.  This can
@@ -430,12 +430,12 @@ if (isset($_REQUEST['uri'])) {
 					// > tive is absent, security researchers MAY assume that
 					// > English is the default language to be used (as per sec-
 					// > tion 4.5 of [RFC2277]).
-					// > 
+					// >
 					// > The order in which they appear MUST NOT be interpreted
 					// > as an indication of priority - rather these MUST BE
 					// > interpreted as all being of equal priority.
 					// >
-					// > This directive MUST NOT appear more than once.	
+					// > This directive MUST NOT appear more than once.
 					case 'preferred-languages':
 						if ($foundPrefLang) {
 							writeOutput('ERROR: <tt>Preferred-Languages</tt> cannot be specified more than once!');

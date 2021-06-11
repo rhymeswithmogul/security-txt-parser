@@ -1,6 +1,6 @@
 <?php
 /**
- * security-txt-parser.php, version 1.2
+ * security-txt-parser.php, version 1.3
  * 
  * Copyright (C) 2019-2021 Colin Cogle <colin@colincogle.name>
  * Project home page: https://github.com/rhymeswithmogul/security-txt-parser
@@ -19,7 +19,7 @@
  * along with this program.  If not, see <https://www.gnu.org/licenses/>.
  *
  * @package		security-txt-parser
- * @version 	1.2	March 15, 2021
+ * @version 	1.3	June 11, 2021
  * @author		Colin Cogle <colin@colincogle.name>
  * @copyright	Copyright (C) 2019-2021 Colin Cogle <colin@colincogle.name>
  * @license 	https://www.gnu.org/licenses/agpl-3.0.html GNU Affero General Public License v3
@@ -34,11 +34,14 @@
  * @access	public
  * @param	string $uri The URI to parse and/or make clickable.
  * @return	string The URI in a more appropriate form.
- * @since	1.1.0
+ * @since	1.1.1
  */
 function makeLink($uri) {
+	// Be sure to write all schemes as lowercase.
+	$clickableSchemes = array('http', 'https', 'mailto', 'msteams', 'tel');
+	
 	$scheme = explode(':', $uri);
-	if (in_array($scheme[0], array('https', 'http', 'mailto', 'tel'))) {
+	if (in_array(strtolower($scheme[0]), $clickableSchemes)) {
 		return "<a rel=\"nofollow\" href=\"$uri\">$uri</a>";
 	}
 	elseif (count($scheme) == 1) {
@@ -143,7 +146,7 @@ if (isset($_REQUEST['uri'])) {
 	curl_setopt($ch, CURLOPT_HTTPHEADER, array('Accept: text/plain'));
 	curl_setopt($ch, CURLOPT_FOLLOWLOCATION, true);
 	curl_setopt($ch, CURLOPT_RETURNTRANSFER, true);
-	curl_setopt($ch, CURLOPT_USERAGENT, 'security-txt-parser/1.2 (https://www.colincogle.name/made/security-txt-parser/)');
+	curl_setopt($ch, CURLOPT_USERAGENT, 'security-txt-parser/1.3 (https://colincogle.name/made/security-txt-parser/)');
 	$txtFile = curl_exec($ch);
 	$retcode = curl_getinfo($ch, CURLINFO_HTTP_CODE);
 	$contentType = curl_getinfo($ch, CURLINFO_CONTENT_TYPE);
@@ -189,9 +192,11 @@ if (isset($_REQUEST['uri'])) {
 		
 		// Prepare some flags to act upon later.
 		$foundCanonical = false;
+		$foundGoodCanonical = false;
 		$foundContact   = 0;		// we count these for preference values
 		$foundExpires   = false;
 		$foundPrefLang  = false;
+		$canonicalURIs  = array();
 
 		// Begin output.
 		echo '<ul>';
@@ -265,26 +270,37 @@ if (isset($_REQUEST['uri'])) {
 						break;
 					
 					// Canonical [Section 3.5.2]:
-					// > This directive indicates the canonical URI where the
-					// > security.txt file is located, which is usually something
-					// > like "https://example.com/.well-known/security.txt".  If
-					// > this directive indicates a web URL, then it MUST begin
-					// > with "https://" (as per section 2.7.2 of [RFC7230]). The
-					// > purpose of this directive is to allow a digital signature
-					// > to be applied to the location of the "security.txt" file.
-					// >
-					// > This directive MUST NOT appear more than once.
+					// > This field indicates the canonical URIs where the
+					// > "security.txt" file is located, which is usually some-
+					// > thing like "https://example.com/.well-known/security.txt".
+					// > If this field indicates a web URI, then it MUST begin
+					// > with "https://" (as per section 2.7.2 of [RFC7230]).
+					// > 
+					// > While this field indicates that a "security.txt" retrieved
+					// > from a given URI is intended to apply to that URI, it
+					// > MUST NOT be interpreted to apply to all canonical URIs
+					// > listed within the file.  Researchers SHOULD use an
+					// > additional trust mechanism such as a digital signature
+					// > (as per Section 3.3) to make the determination that a
+					// > particular canonical URI is applicable.
+					// > 
+					// > If this field appears within a "security.txt" file,
+					// > and the URI used to retrieve that file is not listed
+					// > within any canonical fields, then the contents of the
+					// > file SHOULD NOT be trusted.
 					case 'canonical':
-						if ($foundCanonical) {
-							writeOutput('ERROR: <tt>Canonical</tt> cannot be specified more than once!');
+						$foundCanonical = true;
+
+						if (isHTTP($matches[2])) {
+							writeOutput('ERROR: <tt>Canonical</tt> web URL\'s <strong>MUST</strong> use HTTPS!');
 						}
 						else {
-							$foundCanonical = true;
-							if (isHTTP($matches[2])) {
-								writeOutput('ERROR: <tt>Canonical</tt> URL\'s <strong>MUST</strong> use HTTPS!');
+							if ($uri == $matches[2]) {
+								writeOutput('This file has a <strong>matching</strong> canonical URI of: ' . makeLink($matches[2]));
+								$foundGoodCanonical = true;
 							}
 							else {
-								writeOutput('This file\'s canonical URI is: ' . makeLink($matches[2]));
+								writeOutput('This file has a canonical URI of: ' . makeLink($matches[2]));
 							}
 						}
 						break;
@@ -365,12 +381,14 @@ if (isset($_REQUEST['uri'])) {
 						} else {
 							$foundExpires = true;
 							$timestamp = strtotime($matches[2]);
+							date_default_timezone_set('UTC');
 							writeOutput('This information expires at '
 								. '<time datetime="' . date('c', $timestamp) . '">'
-								.     date('r', $timestamp)
+								.     date('F j, Y, g:i:s a T', $timestamp)
 								. '</time>.'
 							);
 						}
+						break;
 					
 					// Hiring [Section 3.5.6]:
 					// > The "Hiring" directive is used for linking to the ven-
@@ -426,12 +444,17 @@ if (isset($_REQUEST['uri'])) {
 							writeOutput('Preferred contact languages are: ' . $matches[2]);
 						}
 						break;
-					
+
 					// For all unknown directives, print an error.
 					default:
 						writeOutput('ERROR: An unknown directive, ' . $matches[1] . ', was found.');
 					}
 			}
+		}
+
+		// Check the canonical URI's to see if we have a match.
+		if ($foundCanonical && !$foundGoodCanonical) {
+			writeOutput('ERROR: A matching <tt>Canonical</tt> directive was not found.  This file should not be trusted for the given URI!');
 		}
 
 		// Finally, print a warning if mandatory directives were not found.

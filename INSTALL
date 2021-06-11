@@ -15,7 +15,7 @@ For example:
     <form action="<?php echo $_SERVER['PHP_SELF']; ?>" method="GET">
     	<label>
     		Type a <abbr title="Uniform Resource Indicator">URI</abbr>:
-    		<input id="uri" name="uri" type="url" autofocus placeholder="https://example.com" pattern="^https?:\/\/.*" value="<?php echo $_REQUEST['uri'] ?? ''; ?>">
+    		<input id="uri" name="uri" type="url" autofocus placeholder="https://example.com" pattern="^https:\/\/.*" value="<?php echo $_REQUEST['uri'] ?? ''; ?>">
     	</label>
     	<input type="submit" value="Check security.txt">
     </form>

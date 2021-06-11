@@ -18,9 +18,9 @@
  * You should have received a copy of the GNU Affero General Public License.
  * along with this program.  If not, see <https://www.gnu.org/licenses/>.
  *
- * @package		security-txt-parser
+ * @package	security-txt-parser
  * @version 	1.3	June 11, 2021
- * @author		Colin Cogle <colin@colincogle.name>
+ * @author	Colin Cogle <colin@colincogle.name>
  * @copyright	Copyright (C) 2019-2021 Colin Cogle <colin@colincogle.name>
  * @license 	https://www.gnu.org/licenses/agpl-3.0.html GNU Affero General Public License v3
  */
@@ -364,11 +364,11 @@ if (isset($_REQUEST['uri'])) {
 					// > This field indicates the date and time after which the
 					// > data contained in the "security.txt" file is considered
 					// > stale and should not be used (as per Section 6.3). The
-					// > value of this field follows the format defined in sec-
-					// > tion 3.3 of [RFC5322]. It is RECOMMENDED that the value
-					// > of this field be less than a year into the future to
-					// > avoid staleness.
-					// >
+					// > value of this field is formatted according to the
+					// > Internet profile of [ISO.8601] as defined in [RFC3339].
+					// > It is RECOMMENDED that the value of this field be less
+					// > than a year into the future to avoid staleness.
+					// > 
 					// > This field MUST always be present and MUST NOT appear
 					// > more than once.
 					//
@@ -378,7 +378,8 @@ if (isset($_REQUEST['uri'])) {
 					case 'expires':
 						if ($foundExpires == true) {
 							writeOutput('ERROR: <tt>Expires</tt> cannot be specified more than once!');
-						} else {
+						}
+						else {
 							$foundExpires = true;
 							$timestamp = strtotime($matches[2]);
 							date_default_timezone_set('UTC');
@@ -387,6 +388,13 @@ if (isset($_REQUEST['uri'])) {
 								.     date('F j, Y, g:i:s a T', $timestamp)
 								. '</time>.'
 							);
+
+							// Check to make sure this is in proper ISO 8601 format.
+							// Regex from: https://stackoverflow.com/questions/12756159/regex-and-iso8601-formatted-datetime#14322189
+							$regex = '/^([\+-]?\d{4}(?!\d{2}\b))((-?)((0[1-9]|1[0-2])(\3([12]\d|0[1-9]|3[01]))?|W([0-4]\d|5[0-2])(-?[1-7])?|(00[1-9]|0[1-9]\d|[12]\d{2}|3([0-5]\d|6[1-6])))([T\s]((([01]\d|2[0-3])((:?)[0-5]\d)?|24\:?00)([\.,]\d+(?!:))?)?(\17[0-5]\d([\.,]\d+)?)?([zZ]|([\+-])([01]\d|2[0-3]):?([0-5]\d)?)?)?)?$/';
+							if (preg_match($regex, $matches[2]) !== 1) {
+								writeOutput('ERROR:  The <tt>Expires</tt> timestamp is not in the required ISO&nbsp;8601 format!');
+							}
 						}
 						break;
 

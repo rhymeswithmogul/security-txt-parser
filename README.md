@@ -1,7 +1,7 @@
 ![security-txt-parser logo](https://repository-images.githubusercontent.com/208955711/03aa0100-6ca8-11ea-972d-e27719dbae5e)
 
 # security-txt-parser
-Fetch and parse a website's security.txt file.  It is compliant with the specification as defined by [draft-foudil-securitytxt-11](https://datatracker.ietf.org/doc/draft-foudil-securitytxt/11/).
+Fetch and parse a website's security.txt file.  It is compliant with the specification as defined by [draft-foudil-securitytxt-12](https://datatracker.ietf.org/doc/draft-foudil-securitytxt/12/).
 
 ## System Requirements
 This code requires PHP 7, with the GnuPG and cURL modules installed.
@@ -21,7 +21,7 @@ For example:
 <form method="GET" action="<?php echo $_SERVER['PHP_SELF']; ?>">
     <label>
         Type a <abbr title="Uniform Resource Indicator">URI</abbr>:
-        <input id="uri" name="uri" type="url" autofocus placeholder="https://example.com" pattern="^https?:\/\/.*" value="<?php echo $_REQUEST['uri'] ?? ''; ?>">
+        <input id="uri" name="uri" type="url" autofocus placeholder="https://example.com" pattern="^https:\/\/.*" value="<?php echo $_REQUEST['uri'] ?? ''; ?>">
     </label>
     <input type="submit" value="Check security.txt">
 </form>

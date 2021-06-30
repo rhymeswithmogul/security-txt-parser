@@ -1,6 +1,6 @@
 <?php
 /**
- * security-txt-parser.php, version 1.3
+ * security-txt-parser.php, version 1.3.1
  *
  * Copyright (C) 2019-2021 Colin Cogle <colin@colincogle.name>
  * Project home page: https://github.com/rhymeswithmogul/security-txt-parser
@@ -19,7 +19,7 @@
  * along with this program.  If not, see <https://www.gnu.org/licenses/>.
  *
  * @package	security-txt-parser
- * @version 	1.3	June 11, 2021
+ * @version 	1.3.1	June 30, 2021
  * @author	Colin Cogle <colin@colincogle.name>
  * @copyright	Copyright (C) 2019-2021 Colin Cogle <colin@colincogle.name>
  * @license 	https://www.gnu.org/licenses/agpl-3.0.html GNU Affero General Public License v3
@@ -346,7 +346,7 @@ if (isset($_REQUEST['uri'])) {
 						if (substr($keyInfo, 0, 4) == 'dns:') {
 							$dnsRecord = explode('.?', substr($keyInfo,4))[0];
 							writeOutput('An encryption key can be found in the DNS record: '
-								. "<a rel=\"nofollow\" href=\"https://dns.google.com/query?show_dnssec=true&rrtype=61&name=$dnsRecord\">$dnsRecord</a>");
+								. "<a rel=\"nofollow\" href=\"https://dns.google.com/query?show_dnssec=true&rr_type=61&name=$dnsRecord\">$dnsRecord</a>");
 						}
 						elseif (substr($keyInfo, 0, 12) == 'openpgp4fpr:') {
 							$split = str_split(substr($keyInfo, 12), 4);
